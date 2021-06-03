@@ -6,7 +6,6 @@ sb_all_bot_game 1  // !!FAILSAFE ONLY!!, unknown if we still need this
 sb_allow_shoot_through_survivors 0
 sb_close_checkpoint_door_interval 0
 sb_vomit_blind_time 3
-sb_max_team_melee_weapons 2
 sb_melee_approach_victim 0
 
 sb_friend_immobilized_reaction_time_hard 0.43
@@ -22,14 +21,20 @@ sb_separation_danger_min_range 250
 //----------------------------
 // Game Rules
 ammo_sniperrifle_max 270
+ammo_grenadelauncher_max 20
+
 melee_force_scalar 60
 melee_force_scalar_combat_character 25
 
 survivor_friendly_fire_factor_easy 0.125 
 survivor_friendly_fire_factor_normal 0.25
-survivor_friendly_fire_factor_hard 0.375 
+survivor_friendly_fire_factor_hard 0.375
+ 
 sv_infected_scale_min 0.92
 sv_infected_scale_max 1.1
+
+z_jockey_health 250
+z_charger_health 325
 
 //----------------------------
 // Sourcemod
