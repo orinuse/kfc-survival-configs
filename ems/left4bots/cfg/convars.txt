@@ -21,7 +21,7 @@ sb_separation_danger_min_range 250
 //----------------------------
 // Game Rules
 ammo_sniperrifle_max 270
-ammo_grenadelauncher_max 20
+ammo_assaultrifle_max 20
 
 melee_force_scalar 60
 melee_force_scalar_combat_character 25
