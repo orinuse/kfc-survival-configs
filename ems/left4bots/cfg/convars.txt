@@ -1,7 +1,7 @@
 //----------------------------
 // SB commands
 allow_all_bot_survivor_team 1  // makes bots able to move on their own, when a team is empty
-sb_all_bot_game 1  // !!FAILSAFE ONLY!!, unknown if we still need this
+sb_all_bot_game 1  // Required for VS
 
 sb_allow_shoot_through_survivors 0
 sb_close_checkpoint_door_interval 0
@@ -21,7 +21,8 @@ sb_separation_danger_min_range 250
 //----------------------------
 // Game Rules
 ///// ammo is for zombie's server only
-ammo_sniperrifle_max 270
+ammo_smg_max 500
+ammo_shotgun_max 64
 
 melee_force_scalar 60
 melee_force_scalar_combat_character 25
@@ -33,10 +34,11 @@ survivor_friendly_fire_factor_hard 0.375
 sv_infected_scale_min 0.92
 sv_infected_scale_max 1.1
 
-z_jockey_health 250
-z_charger_health 325
+// z_jockey_health 250
+// z_charger_health 325
 
 //----------------------------
 // Sourcemod
-// sm_cvar acs_chmap_broadcast_interval 0
-// sm_cvar acs_chmap_policy 1
+// Example:
+// acs_chmap_broadcast_interval 0
+// acs_chmap_policy 1
