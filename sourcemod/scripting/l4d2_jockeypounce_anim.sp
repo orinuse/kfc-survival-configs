@@ -2,7 +2,7 @@
 #define REQUIRE_PLUGIN
 #include <left4dhooks>
 
-#define DEBUG 2		// 1 - Show animation hooking debug; 2 - Include Jockey keyboard input debug
+#define DEBUG 0		// 1 - Show animation hooking debug; 2 - Include Jockey keyboard input debug
 #define PLUGIN_VERSION "1.1"
 
 #define ZOMBIE_JOCKEY 5
