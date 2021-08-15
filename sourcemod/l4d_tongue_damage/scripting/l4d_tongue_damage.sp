@@ -16,9 +16,7 @@
 *	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
-
-#define PLUGIN_VERSION 		"1.6_Orin1"
+#define PLUGIN_VERSION 		"1.6_Orin2"
 
 /*======================================================================================
 	Plugin Info:
@@ -31,6 +29,12 @@
 
 ========================================================================================
 	Change Log:
+
+1.6_Orin2 (15-Aug-2021)
+	- Expanded the 'l4d_tongue_damage_hurtmode' values, mostly as compensation from forgetting about L4D1 support.
+	- - All damage types have been stress tested, and only the meaningful ones are kept.
+	- All ConVars no longer use the same function for change hooks, for mostly organization and less unnecessary memory used.
+	- 'z_difficulty' now has a convar hook, previously it didn't.
 
 1.6_Orin1 (13-Aug-2021)
 	- Cached float values into a variable. This is for style consistency.
@@ -69,17 +73,21 @@
 #include <sdktools>
 #include <sdkhooks>
 
-#define DMG_INSECT_SWARM 				DMG_ENERGYBEAM	// custom name; survivors say spitter voice line with this
-//#define DMG_BLAMELESS_FRIENDLY_FIRE 	DMG_PREVENT_PHYSICS_FORCE
-//#define DMG_FORCE_INCAPACITATE 		DMG_PARALYZE
+#define DEBUG 0
+
+// Some are for debugging
+#define DMG_INSECT_SWARM_L4D2 			DMG_ENERGYBEAM	// custom name; survivors say spitter voice line with this
 #define DMG_CHOKE 						DMG_ACID		// DMG_POISON has same effect seemingly
-//#define DMG_DISMEMBER 					DMG_BUCKSHOT
+#define DMG_FORCE_INCAPACITATE 			DMG_PARALYZE
+#if DEBUG
+#define DMG_BLAMELESS_FRIENDLY_FIRE 	DMG_PREVENT_PHYSICS_FORCE
+#define DMG_DISMEMBER 					DMG_BUCKSHOT
+#endif
 
 #define CVAR_FLAGS			FCVAR_NOTIFY
 
-
 ConVar g_hCvarAllow, g_hCvarMPGameMode, g_hCvarModes, g_hCvarModesOff, g_hCvarModesTog, g_hCvarDamageBase, g_hCvarTime, g_hCvarDamageMulti, g_hCvarDamageHurtMode, g_hCvarDifficulty;
-bool g_bCvarAllow, g_bMapStarted, g_bLateLoad;
+bool g_bCvarAllow, g_bMapStarted, g_bLateLoad, g_bL4D1;
 float g_fCvarDamageBase, g_fCvarTime, g_fCvarDamageMulti, g_fDamage;
 int g_iCvarDamageHurtMode;
 bool g_bChoking[MAXPLAYERS+1], g_bBlockReset[MAXPLAYERS+1];
@@ -102,7 +110,9 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	EngineVersion test = GetEngineVersion();
-	if( test != Engine_Left4Dead && test != Engine_Left4Dead2 )
+	if( test == Engine_Left4Dead )
+		g_bL4D1 = true;
+	else if( test != Engine_Left4Dead2 )
 	{
 		strcopy(error, err_max, "Plugin only supports Left 4 Dead 1 & 2.");
 		return APLRes_SilentFailure;
@@ -120,7 +130,15 @@ public void OnPluginStart()
 	g_hCvarDamageBase =		CreateConVar(	"l4d_tongue_damage_base",			"1.0",				"Default damage of the tongue.", CVAR_FLAGS );
 	g_hCvarTime =			CreateConVar(	"l4d_tongue_damage_time",			"1.5",				"How often to damage players.", CVAR_FLAGS );
 	g_hCvarDamageMulti =	CreateConVar(	"l4d_tongue_damage_diffscale",		"2.0",				"For every new difficulty, increase the base damage by this much.", CVAR_FLAGS );
-	g_hCvarDamageHurtMode =	CreateConVar(	"l4d_tongue_damage_hurtmode",		"1",				"0 - Mimic the infected melee attack's feedback. 1 - 'Slash' hurt sounds are muted on non-incappeds. 2 - Survivors may warn about goo when damaged during a newly recent tongue grab.", CVAR_FLAGS );
+	char sCvarDamageHurtModeDesc[256];
+	switch( g_bL4D1 )
+	{
+		case true:
+			strcopy(sCvarDamageHurtModeDesc, sizeof(sCvarDamageHurtModeDesc), "0 - Mimic infected claw slice. 1 - Non-incappeds mute 'sliced' sounds. 2 - Always incap players.");
+		case false:
+			strcopy(sCvarDamageHurtModeDesc, sizeof(sCvarDamageHurtModeDesc), "0 - Mimic infected claw slice. 1 - Non-incappeds mute 'sliced' sounds. 2 - Always incap players. 3 - Mode 0 + viewpunch (L4D2). 4 - Mode 1 + viewpunch (L4D2). 5 - Warn Spitter's Acid; damage is always 1, but old one is used for incaps (L4D2).");
+	}
+	g_hCvarDamageHurtMode =	CreateConVar(	"l4d_tongue_damage_hurtmodeee",		"1",				sCvarDamageHurtModeDesc, CVAR_FLAGS );
 	CreateConVar(							"l4d_tongue_damage_version",		PLUGIN_VERSION,		"Tongue Damage plugin version.", FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	if( g_bLateLoad )
 	{
@@ -132,17 +150,24 @@ public void OnPluginStart()
 	g_hCvarDifficulty =	FindConVar("z_difficulty");
 	AutoExecConfig(true, "l4d_tongue_damage");
 
+	// == Recheck Allow ==
 	g_hCvarMPGameMode.AddChangeHook(ConVarChanged_Allow);
 	g_hCvarModes.AddChangeHook(ConVarChanged_Allow);
 	g_hCvarModesOff.AddChangeHook(ConVarChanged_Allow);
 	g_hCvarModesTog.AddChangeHook(ConVarChanged_Allow);
 	g_hCvarAllow.AddChangeHook(ConVarChanged_Allow);
-	g_hCvarDamageBase.AddChangeHook(ConVarChanged_Allow);
-	g_hCvarTime.AddChangeHook(ConVarChanged_Allow);
-	g_hCvarDamageMulti.AddChangeHook(ConVarChanged_Allow);
-	g_hCvarDamageHurtMode.AddChangeHook(ConVarChanged_Allow);
+
+	// == Reload Cache ==
+	g_hCvarDifficulty.AddChangeHook(ConVarChanged_CacheReload);
+	g_hCvarDamageBase.AddChangeHook(ConVarChanged_CacheReload);
+	g_hCvarTime.AddChangeHook(ConVarChanged_CacheReload);
+	g_hCvarDamageMulti.AddChangeHook(ConVarChanged_CacheReload);
+	g_hCvarDamageHurtMode.AddChangeHook(ConVarChanged_CacheReload);
 
 	HookEvent("tongue_grab",		Event_GrabStart);
+#if DEBUG
+	HookEvent("player_hurt",		Event_PlayerHurt);
+#endif
 }
 
 
@@ -152,28 +177,40 @@ public void OnPluginStart()
 // ====================================================================================================
 public void OnConfigsExecuted()
 {
+	IsAllowed();
 	ReloadCachedValues();
+}
+
+// VSCode - Reload Convars relating to if the plugin should be toggled.
+public void ConVarChanged_Allow(Handle convar, const char[] oldValue, const char[] newValue)
+{
 	IsAllowed();
 }
 
-public void ConVarChanged_Allow(Handle convar, const char[] oldValue, const char[] newValue)
+// VSCode - Reload Convars relating to the Smoker's Tongue Damage plugin itself.
+public void ConVarChanged_CacheReload(Handle convar, const char[] oldValue, const char[] newValue)
 {
 	ReloadCachedValues();
-	IsAllowed();
 }
 
 void ReloadCachedValues()
 {
+	// Creates race conditions
+//	if( !g_bCvarAllow )
+//		return;
+
 	g_fCvarDamageBase = g_hCvarDamageBase.FloatValue;
 	g_fCvarTime = g_hCvarTime.FloatValue;
 	g_fCvarDamageMulti = g_hCvarDamageMulti.FloatValue;
 	g_iCvarDamageHurtMode = g_hCvarDamageHurtMode.IntValue;
 
+	// Needs to be a length of 2 or nothing will show up, not sure why
 	char sDifficulty[2];
 	g_hCvarDifficulty.GetString(sDifficulty, sizeof(sDifficulty));
 	g_fDamage = GetCachedTongueDamage( DifficultyStringToID(sDifficulty) );
 }
 
+// VSCode - Check if plugin is allowed to be enabled
 void IsAllowed()
 {
 	bool bCvarAllow = g_hCvarAllow.BoolValue;
@@ -336,6 +373,7 @@ public void Event_GrabStart(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
+// VSCode - Stop applying damage, and clear timers.
 public void Event_GrabStop(Event event, const char[] name, bool dontBroadcast)
 {
 	int userid = event.GetInt("victim");
@@ -352,6 +390,7 @@ public void Event_GrabStop(Event event, const char[] name, bool dontBroadcast)
 	}
 }
 
+// VSCode - Perform the Tongue Damage
 public Action TimerDamage(Handle timer, any client)
 {
 	client = GetClientOfUserId(client);
@@ -377,9 +416,48 @@ public Action TimerDamage(Handle timer, any client)
 				int damagetype;
 				switch( g_iCvarDamageHurtMode )
 				{
+				#if !DEBUG
+					case 0: damagetype = DMG_SLASH;
 					case 1: damagetype = !(GetEntProp(client, Prop_Send, "m_isIncapacitated")) ? DMG_CHOKE : DMG_SLASH;
-					case 2: damagetype = DMG_INSECT_SWARM;
-					default: damagetype = DMG_SLASH;
+					case 2: damagetype = DMG_FORCE_INCAPACITATE;
+					case 3: damagetype = DMG_CLUB;
+					case 4: damagetype = !(GetEntProp(client, Prop_Send, "m_isIncapacitated")) ? DMG_CHOKE : DMG_CLUB;
+					case 5: damagetype = DMG_INSECT_SWARM_L4D2;
+					default: damagetype = DMG_CHOKE;
+				#else
+					case 0: damagetype = DMG_GENERIC;
+					case 1: damagetype = DMG_CRUSH;
+					case 2: damagetype = DMG_BULLET;
+					case 3: damagetype = DMG_SLASH;
+					case 4: damagetype = DMG_BURN;
+					case 5: damagetype = DMG_VEHICLE;
+					case 6: damagetype = DMG_FALL;
+					case 7: damagetype = DMG_BLAST;
+					case 8: damagetype = DMG_CLUB;
+					case 9: damagetype = DMG_SHOCK;
+					case 10: damagetype = DMG_SONIC;
+					case 11: damagetype = DMG_INSECT_SWARM_L4D2; // DMG_ENERGYBEAM
+					case 12: damagetype = DMG_BLAMELESS_FRIENDLY_FIRE; // DMG_PREVENT_PHYSICS_FORCE
+					case 13: damagetype = DMG_NEVERGIB;
+					case 14: damagetype = DMG_ALWAYSGIB;
+					case 15: damagetype = DMG_DROWN;
+					case 16: damagetype = DMG_FORCE_INCAPACITATE;
+					case 17: damagetype = DMG_NERVEGAS;
+					case 18: damagetype = DMG_POISON;
+					case 19: damagetype = DMG_RADIATION;
+					case 20: damagetype = DMG_DROWNRECOVER;
+					case 21: damagetype = DMG_CHOKE; // DMG_ACID
+					case 22: damagetype = DMG_SLOWBURN;
+					case 23: damagetype = DMG_REMOVENORAGDOLL;
+					case 24: damagetype = DMG_PHYSGUN;
+					case 25: damagetype = DMG_PLASMA;
+					case 26: damagetype = DMG_AIRBOAT;
+					case 27: damagetype = DMG_DISSOLVE;
+					case 28: damagetype = DMG_BLAST_SURFACE;
+					case 29: damagetype = DMG_DIRECT;
+					case 30: damagetype = DMG_DISMEMBER; // DMG_BUCKSHOT
+					default: damagetype = DMG_CHOKE;
+				#endif
 				}
 				HurtEntity(client, attacker, g_fDamage, damagetype);
 				if( g_bBlockReset[client] == false )
@@ -397,6 +475,14 @@ public Action TimerDamage(Handle timer, any client)
 	g_hTimers[client] = null;
 	return Plugin_Stop;
 }
+
+#if DEBUG
+public void Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
+{
+	int type = event.GetInt("type");
+	PrintHintTextToAll("Recent Damage type is #%i", type);
+}
+#endif
 
 void HurtEntity(int victim, int client, float damage, int damagetype = DMG_SLASH)
 {
