@@ -6,7 +6,7 @@
 #define	SLOT_PRIMARY	0
 
 #define DEBUG 0
-#define PLUGIN_VERSION "1.4"
+#define PLUGIN_VERSION "1.2_Orin2"
 
 #pragma tabsize 4
 #pragma semicolon 1
@@ -20,13 +20,13 @@ bool g_bAmmoNoticePrinted[MAXPLAYERS + 1];
 #endif
 
 /*
-==== Stable changes up until now for '1.4' ====
-// 1.4
+==== Stable changes up until now for '1.2_Orin2' ====
+// 1.2_Orin2
 // - Cleaned up code, like syntax issues
 // - - Cleared debug messages that ruined readability and isn't as important
 
-==== Stable changes up until now for '1.3' ====
-// 1.3
+==== Stable changes up until now for '1.2_Orin1' ====
+// 1.2_Orin1
 // A
 // - Code rework
 // - Metadata of plugin properly set up

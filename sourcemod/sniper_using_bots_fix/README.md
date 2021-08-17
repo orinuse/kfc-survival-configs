@@ -2,18 +2,19 @@
 Survivor Bots with Snipers won't switch to pistols like they're using a shotgun. They are blocked from doing so until their Snipers are:
 - Out of reserve ammo
 - - Has an empty clip
-- - - Not in reloading state.
+- - - Not in reloading state.<br>
+This is a plugin authored by a 3rd party with no permission consulted, sereky. Read the disclaimer at the repository's main `README.md` for more info.
 
 ## Source
 Original Author: sereky, cravenge
 https://forums.alliedmods.net/showthread.php?p=1744063
 
 ### Changelog
-__1.4__
+__1.2_Orin2__
 - Cleaned up code, like syntax issues.
 - - Cleared debug messages that ruined readability and isn't as important.
 
-__1.3__
+__1.2_Orin1__
 - A
 - - Code rework
 - - Metadata of plugin properly set up
@@ -39,3 +40,9 @@ __1.3__
 - - Organized DEBUG code, keeping them behind for historical reasons
 - - Supports Magnum now
 - - Check for snipers being reloaded
+
+### Convars
+
+| 		  Name           		|  Default	|    Is Edit	| Description |
+| -----------------------------	| --------- | -------------	| ----------- |
+| l4d_tongue_damage_version		| 1.2_Orin2	|	  ✖️		| Tongue Damage plugin version. |
