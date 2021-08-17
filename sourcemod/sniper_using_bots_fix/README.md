@@ -1,8 +1,8 @@
 # Plugin Description
 Survivor Bots with Snipers won't switch to pistols like they're using a shotgun. They are blocked from doing so until their Snipers are:
-- Out of reserve ammo
-- - Has an empty clip
-- - - Not in reloading state.<br>
+- Out of reserve ammo; This also includeS:
+- - Has an empty clip.
+- - Not in reloading state.<br>
 This is a plugin authored by a 3rd party with no permission consulted, sereky. Read the disclaimer at the repository's main `README.md` for more info.
 
 ## Source
