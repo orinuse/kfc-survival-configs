@@ -7,6 +7,9 @@ Original Author: SilverShot
 https://sourcemod.net/plugins.php?exact=exact&sortby=title&search=1&author=Silvers
 
 ### Changelog
+1.6_Orin2a (19-Aug-2021)
+- Fixed 'l4d_tongue_damage_hurtmode' being named as 'l4d_tongue_damage_hurtmodeee'.
+	
 1.6_Orin2 (15-Aug-2021)
 - Expanded the 'l4d_tongue_damage_hurtmode' values, mostly as compensation from forgetting about L4D1 support.
 - - All damage types have been stress tested, and only the meaningful ones are kept.
@@ -30,7 +33,7 @@ Commands are to be stored in `/cfg/sourcemod/l4d_tongue_control.cfg`; auto-gener
 | l4d_tongue_damage_time		|	 1.5	|	  ✖️		| How often to damage players. |
 | l4d_tongue_damage_diffscale	|	 2.0	|	  ☑️		| For every new difficulty, increase the base damage by this much. |
 | l4d_tongue_damage_hurtmode	|	  1		|	  ☑️		| 0 - Mimic infected claw slice. 1 - Non-incappeds mute 'sliced' sounds. 2 - Always incap players. 3 - Mode 0 + viewpunch (L4D2). 4 - Mode 1 + viewpunch (L4D2). 5 - Warn Spitter's Acid; damage is always 1, but old one is used for incaps (L4D2). |
-| l4d_tongue_damage_version		| 1.6_Orin2	|	  ✖️		| Tongue Damage plugin version. |
+| l4d_tongue_damage_version		| 1.6_Orin2a|	  ✖️		| Tongue Damage plugin version. |
 
 #### Tongue Damage Chart
 Glossary:<br>

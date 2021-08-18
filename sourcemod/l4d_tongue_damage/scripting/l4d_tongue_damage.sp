@@ -16,7 +16,7 @@
 *	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define PLUGIN_VERSION 		"1.6_Orin2"
+#define PLUGIN_VERSION 		"1.6_Orin2a"
 
 /*======================================================================================
 	Plugin Info:
@@ -29,6 +29,9 @@
 
 ========================================================================================
 	Change Log:
+	
+1.6_Orin2a (19-Aug-2021)
+	- Fixed 'l4d_tongue_damage_hurtmode' being named as 'l4d_tongue_damage_hurtmodeee'.
 
 1.6_Orin2 (15-Aug-2021)
 	- Expanded the 'l4d_tongue_damage_hurtmode' values, mostly as compensation from forgetting about L4D1 support.
@@ -138,7 +141,7 @@ public void OnPluginStart()
 		case false:
 			strcopy(sCvarDamageHurtModeDesc, sizeof(sCvarDamageHurtModeDesc), "0 - Mimic infected claw slice. 1 - Non-incappeds mute 'sliced' sounds. 2 - Always incap players. 3 - Mode 0 + viewpunch (L4D2). 4 - Mode 1 + viewpunch (L4D2). 5 - Warn Spitter's Acid; damage is always 1, but old one is used for incaps (L4D2).");
 	}
-	g_hCvarDamageHurtMode =	CreateConVar(	"l4d_tongue_damage_hurtmodeee",		"1",				sCvarDamageHurtModeDesc, CVAR_FLAGS );
+	g_hCvarDamageHurtMode =	CreateConVar(	"l4d_tongue_damage_hurtmode",		"1",				sCvarDamageHurtModeDesc, CVAR_FLAGS );
 	CreateConVar(							"l4d_tongue_damage_version",		PLUGIN_VERSION,		"Tongue Damage plugin version.", FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	if( g_bLateLoad )
 	{
