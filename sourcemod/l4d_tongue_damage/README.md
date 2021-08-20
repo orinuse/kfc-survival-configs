@@ -1,6 +1,6 @@
 # Plugin Description
 Provides Smoker with the ability to deal damage in all modes when pulling a Survivors, with more configurations.<br>
-This is a plugin authored by a 3rd party with no permission consulted, SilverShot (or Silvers). Read both the disclaimer at the repository's main `README.md`, and this plugin's license in the source code for more info.
+This is a plugin authored by a 3rd party with a license provided; author being SilverShot (or Silvers). Read both the disclaimer at the repository's main `README.md`, and this plugin's license in the source code for more info.
 
 ## Source
 Original Author: SilverShot
