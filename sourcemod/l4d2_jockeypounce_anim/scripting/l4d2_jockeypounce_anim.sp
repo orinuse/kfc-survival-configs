@@ -1,34 +1,38 @@
 #include <sourcemod>
 #define REQUIRE_PLUGIN
 #include <left4dhooks>
+#undef REQUIRE_PLUGIN
 
 #define DEBUG 0		// 1 - Show animation hooking debug; 2 - Include Jockey keyboard input debug
-#define PLUGIN_VERSION "1.1"
 
-#define ZOMBIE_JOCKEY 5
+#define PLUGIN_VERSION "1.1a"
 
-bool g_bAnimHooked[MAXPLAYERS+1];
-bool g_bJockeyJumping[MAXPLAYERS+1];
-bool g_bLateLoad;
+bool g_bAnimHooked[MAXPLAYERS+1], g_bJockeyJumping[MAXPLAYERS+1], g_bLateLoad;
+ConVar g_cvBotMimic;
 
-/* #if DEBUG > 0
-int g_iLastSequence;
-#endif */
+/*========================================================================================
+	Change Log:
 
-// ============================
-//  This plugin isn't perfect, any improvements would be
-//	welcome, but this is not getting published to the
-//	AlliedModders site at its current state, for
-//	I'm not sastified currently. It should work
-//	just fine without issues though.
-// ============================
+1.1a (31-Aug-2021)
+	- Band-aid fix to 'bot_mimic' breaking the plugin
+	- Metadata: Plugin URL
+
+1.1 (11-Aug-2021)
+	- Tidied up code, and removed some debug code in doing so
+	- Late load support
+	- Prevented being able to cancel the pounce animation by pressing "Jump" again
+
+1.0 (11-Aug-2021)
+	- Plugin release
+
+======================================================================================*/
 public Plugin myinfo = 
 {
 	name = "[L4D2] Jockey Pounce Animation",
 	author = "Orin",
 	description = "Forces Jockies to use the unused Pounce animation when in ACT_JUMP.",
 	version = PLUGIN_VERSION,
-	url = ""
+	url = "https://github.com/orinuse/kfc-survival-configs/tree/main/sourcemod/scripting/l4d2_jockeypounce_anim"
 }
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -47,6 +51,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
 	CreateConVar("l4d2_jockeypounce_anim_version", PLUGIN_VERSION, "\"Jockey Pounce Animation\"'s plugin version", FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	g_cvBotMimic = FindConVar("bot_mimic");
 
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_death", Event_OrinClearClient);
@@ -80,7 +85,8 @@ public void OnPluginEnd()
 // --------------
 public Action OnPlayerRunCmd(int client, int& buttons, int& impulse, float vel[3], float angles[3], int& weapon, int& subtype, int& cmdnum, int& tickcount, int& seed, int mouse[2])
 {
-	if( IsJockey(client) )
+	// 'bot_mimic' breaks everything
+	if( !g_cvBotMimic.BoolValue && IsJockey(client) )
 	{
 		// Keep track of when the Jockey presses their jump button
 		if( buttons & IN_JUMP )
@@ -151,9 +157,6 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 // Uses "m_nSequence" animation numbers, which are different for each model.
 Action OnAnimPost(int client, int &sequence)
 {
-/*	#if DEBUG > 0
-	g_iLastSequence = sequence;
-	#endif */
 	if( sequence == 10 )
 	{
 		if( !g_bJockeyJumping[client] )
@@ -167,7 +170,8 @@ Action OnAnimPost(int client, int &sequence)
 
 // ++ Macros ++ 
 // ------------
-stock bool IsJockey(int client)
+#define ZOMBIE_JOCKEY 5
+bool IsJockey(int client)
 {
 	return client ? GetEntProp(client, Prop_Send, "m_zombieClass") == ZOMBIE_JOCKEY : false;
 }

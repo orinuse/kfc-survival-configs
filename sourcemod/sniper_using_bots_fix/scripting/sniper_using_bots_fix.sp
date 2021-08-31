@@ -13,13 +13,18 @@
 #pragma newdecls required
 
 bool g_bLateLoad = false;
-ConVar g_cvBotMimic = null;
+ConVar g_cvBotMimic;
 
 #if DEBUG
 bool g_bAmmoNoticePrinted[MAXPLAYERS + 1];
 #endif
 
 /*
+==== Stable changes up until now for '1.2_Orin3' ====
+// 1.2_Orin3
+// - Mini code cleanup, again
+// - Metadata update (url)
+
 ==== Stable changes up until now for '1.2_Orin2' ====
 // 1.2_Orin2
 // - Cleaned up code, like syntax issues
@@ -61,7 +66,7 @@ public Plugin myinfo =
 	author = "sereky; Edited by cravenge & Orin",
 	description = "Survivor Bots with Snipers won't switch to pistols.",
 	version = PLUGIN_VERSION,
-	url = "https://forums.alliedmods.net/showthread.php?p=1744063"
+	url = "https://github.com/orinuse/kfc-survival-configs/tree/main/sourcemod/sniper_using_bots_fix"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)

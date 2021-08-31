@@ -10,6 +10,10 @@ Original Author: sereky, cravenge
 https://forums.alliedmods.net/showthread.php?p=1744063
 
 ### Changelog
+__1.2_Orin3__
+- Mini code cleanup, again
+- Metadata update (url)
+
 __1.2_Orin2__
 - Cleaned up code, like syntax issues.
 - - Cleared debug messages that ruined readability and isn't as important.
