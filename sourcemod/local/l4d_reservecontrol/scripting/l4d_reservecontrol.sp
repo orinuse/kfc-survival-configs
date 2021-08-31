@@ -1,8 +1,11 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#define REQUIRE_PLUGIN
+#include <dhooks>
+#undef REQUIRE_PLUGIN
 
-#define DEBUG 0
+#define DEBUG 2
 #define MISSING_AMMO_NOTIFS 1
 #define PLUGIN_VERSION "rework-0.1"
 #define GAMEDATA "l4d_reservecontrol"
@@ -12,9 +15,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-bool g_bLateLoad = false;
+bool g_bLateLoad, g_bL4D2;
 //bool g_bL4D1 = false;
-bool g_bL4D2 = false;
 
 public Plugin myinfo = 
 {
@@ -55,7 +57,7 @@ int g_iAmmoMaxItems = -1;
 public void OnPluginStart()
 {
 	LoadGameData();
-	SetupAmmoStringMap(g_bL4D2);
+	DoReserveStringMap(g_bL4D2);
 
 	CreateConVar("l4d_reservecontrol_version", PLUGIN_VERSION, "'Reserve Control' plugin's version", FCVAR_SPONLY|FCVAR_DONTRECORD|FCVAR_NOTIFY);
 	g_cvAmmoItemDump = CreateConVar("l4d_reservecontrol_ammopiles_dumpitems", "0", "If non-zero, display what indexes do the weapons reside in.", FCVAR_DONTRECORD);
@@ -89,8 +91,9 @@ void LoadGameData()
 	GameData hGameData = new GameData(GAMEDATA);
 	if( hGameData == null ) SetFailState("'x04Failed to find \"%s.txt\" gamedata!", GAMEDATA);
 
-	// TO-DO: Retest this (although I'm not sure if we'd need this in here anymore)
-	// Params: (void)
+	// This: ENTITY
+	// Params: N/A
+	// Return: INT
 	StartPrepSDKCall(SDKCall_Entity);
 	if( PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CBaseCombatWeapon::GetMaxClip1") )
 	{
@@ -103,8 +106,9 @@ void LoadGameData()
 		LogError("Can't find signature: 'CBaseCombatWeapon::GetMaxClip1'");
 	}
 
-	// TO-DO: STRESS TEST THIS
-	// Params: (int, CBaseCombatCharacter const*)
+	// This: RAW
+	// Params: INT [AmmoIndex], CBaseCombatCharacter const*
+	// Return: INT
 	StartPrepSDKCall(SDKCall_Raw);
 	if( PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CAmmoDef::MaxCarry") )
 	{
@@ -120,9 +124,12 @@ void LoadGameData()
 		
 	delete hGameData;
 }
-void SetupAmmoStringMap(bool is_l4d2)
+void DoReserveStringMap(bool is_l4d2)
 {
 	g_smWeaponData = new StringMap();
+
+//	++ Defaults ++
+//	--------------
 //	g_smWeaponData.SetValue("weapon_pistol", 65535); // irrelevant
 	g_smWeaponData.SetValue("weapon_smg", 500);
 	g_smWeaponData.SetValue("weapon_pumpshotgun", 64);
@@ -131,21 +138,21 @@ void SetupAmmoStringMap(bool is_l4d2)
 	g_smWeaponData.SetValue("weapon_hunting_rifle", 120);
 	if( is_l4d2 )
 	{
-		g_smWeaponData.SetValue("weapon_smg_silenced", 180);
-		g_smWeaponData.SetValue("weapon_shotgun_chrome", 64); // 3rd longest, 21 chars
+		g_smWeaponData.SetValue("weapon_smg_silenced", 260);
+		g_smWeaponData.SetValue("weapon_shotgun_chrome", 72); // 3rd longest, 21 chars
 		g_smWeaponData.SetValue("weapon_rifle_desert", 400);
-		g_smWeaponData.SetValue("weapon_rifle_ak47", 240);
-		g_smWeaponData.SetValue("weapon_shotgun_spas", 60);
+		g_smWeaponData.SetValue("weapon_rifle_ak47", 200);
+		g_smWeaponData.SetValue("weapon_shotgun_spas", 72);
 		g_smWeaponData.SetValue("weapon_sniper_military", 150); // 2nd longest, 22 chars
 		
-		g_smWeaponData.SetValue("weapon_smg_mp5", 500);
-		g_smWeaponData.SetValue("weapon_rifle_sg552", 270);
+		g_smWeaponData.SetValue("weapon_smg_mp5", 480);
+		g_smWeaponData.SetValue("weapon_rifle_sg552", 320);
 		g_smWeaponData.SetValue("weapon_sniper_scout", 90);
 		g_smWeaponData.SetValue("weapon_sniper_awp", 72);
 		
 		g_smWeaponData.SetValue("weapon_grenade_launcher", 30); // Longest, 23 chars
 //		g_smWeaponData.SetValue("weapon_pistol_magnum", 65535); // irrelevant
-		g_smWeaponData.SetValue("weapon_rifle_m60", 120);
+//		g_smWeaponData.SetValue("weapon_rifle_m60", 120);
 	}
 }
 
@@ -223,9 +230,11 @@ public void Event_ItemPickup(Event event, const char[] name, bool dontBroadcast)
 			char sWeapon[16];
 			GetEntityClassname(iWeapon, sWeapon, sizeof(sWeapon));
 			int iIndex = BestWeaponStringIndex(sWeapon);
+			#if DEBUG > 1
+			PrintToChatAll("Index: %i; String cmp: %i, %i", iIndex, (sWeapon[9] == item[9]), (sWeapon[iIndex] == item[iIndex]) );
+			#endif
 
-			// Yep. This is legal syntax, and it works.
-			if( iIndex > 0 ) if( sWeapon[9] == item[9] && sWeapon[iIndex] == item[iIndex] )
+			if( iIndex > 0 && (sWeapon[9] == item[9] && sWeapon[iIndex] == item[iIndex]) )
 			{
 				DataPack pack = new DataPack();
 				pack.WriteCell(client);
@@ -248,6 +257,7 @@ public void OnSDKWeaponEquipPost(int client, int weapon)
 	int iReserve = GetEntProp(weapon, Prop_Data, "m_iExtraPrimaryAmmo");
 	#if DEBUG > 0
 	PrintToChatAll("\x01%N got %s [%i] \x05(%i reserve)", client, sWeapon, weapon, iReserve);
+	PrintToChatAll("SDKCall: %i", SDKCall(g_hSDKCall_AmmoDefMaxCarry, weapon, client) );
 	#endif
 
 	DataPack pack = new DataPack();

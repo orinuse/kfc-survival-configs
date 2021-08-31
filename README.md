@@ -7,8 +7,9 @@ For any 3rd party plugin edits in this GitHub repository, `kfc-survival-configs`
 
 Additionally, some authors choose to store licenses in their own plugins's source code. Please read them if you have any issues for anything here you'd like to discuss with me about.
 
-## Requirements
-- [Left 4 DHooks Direct](https://forums.alliedmods.net/showthread.php?t=321696) \(Minimum required version: v1.06\)
+## Pre-installed Requirements
+- [DHooks: Dynamic Detours](https://forums.alliedmods.net/showthread.php?p=2588686#post2588686)
+- [Left 4 DHooks Direct](https://forums.alliedmods.net/showthread.php?t=321696)
 
 # Discord
 Join the Discord at discord.gg/sgCvBg437D, give a greet when you join :smile:
