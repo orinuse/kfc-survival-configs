@@ -6,21 +6,20 @@
 #undef REQUIRE_PLUGIN
 
 #define DEBUG 0
-#define BEAT_THE_RUSH 1
 #define GAMEDATA "l4d_reservecontrol"
-#define PLUGIN_VERSION "rework-0.2"
+#define PLUGIN_VERSION "1.0"
 
 #pragma semicolon 1
 #pragma newdecls required
 
-bool g_bL4D2, g_bLateLoad;
+bool g_bLateLoad;
 public Plugin myinfo = 
 {
 	name = "[L4D/L4D2] Reserve Control",
 	author = "Orin, Psykotikism [Signatures]",
 	description = "Individually control weapon reserve independant of 'ammo_*' cvars.",
 	version = PLUGIN_VERSION,
-	url = "[PRIVATE]"
+	url = "https://github.com/orinuse/kfc-survival-configs/tree/main/sourcemod/l4d_reservecontrol"
 };
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -28,10 +27,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	EngineVersion engine = GetEngineVersion();
 /*	if( engine == Engine_Left4Dead )
 		g_bL4D1 = true;
-	else */
-	if( engine == Engine_Left4Dead2 )
+	else if( engine == Engine_Left4Dead2 )
 		g_bL4D2 = true;
-	else if( engine != Engine_Left4Dead )
+*/
+	if( engine != Engine_Left4Dead && engine != Engine_Left4Dead2 )
 	{
 		strcopy(error, err_max, "Plugin only supports Left 4 Dead 1 & 2");
 		return APLRes_SilentFailure;
@@ -42,13 +41,13 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 // ++ OnLoad ++ 
 // ------------
-StringMap g_smWeaponData;
-DynamicDetour g_dynAmmoDefMaxCarry;
+static StringMap g_smReserveData;
+static DynamicDetour g_dynAmmoDefMaxCarry;
 
 public void OnPluginStart()
 {
 	LoadGameData();
-	DoReserveStringMap(g_bL4D2);
+	LoadConfigSMC();
 	CreateConVar("l4d_reservecontrol_version", PLUGIN_VERSION, "'Reserve Control' plugin's version", FCVAR_SPONLY|FCVAR_DONTRECORD|FCVAR_NOTIFY);
 	HookEvent("player_team", Event_PlayerTeam);
 
@@ -61,7 +60,8 @@ public void OnPluginStart()
 		}
 	}
 }
-// View the hl2sdk (or leaks) to better kow what the functions may be doing
+// ------------
+// GameData
 void LoadGameData()
 {
 	GameData hGameData = new GameData(GAMEDATA);
@@ -71,13 +71,60 @@ void LoadGameData()
 	// Params: INT [AmmoIndex], CBaseCombatCharacter const*
 	// Return: INT
 	g_dynAmmoDefMaxCarry = DynamicDetour.FromConf(hGameData, "CAmmoDef::MaxCarry");
+	// Which if + else if style do you prefer?
 	if (!g_dynAmmoDefMaxCarry)
 		SetFailState("Failed to setup dhook for CAmmoDef::MaxCarry!");
-	else if (!g_dynAmmoDefMaxCarry.Enable(Hook_Pre, Detour_AmmoDefMaxCarry))
+	else if (!g_dynAmmoDefMaxCarry.Enable(Hook_Post, Detour_AmmoDefMaxCarry))
 		SetFailState("Failed to enable detour for CAmmoDef::MaxCarry!");
 
-	PrintToServer("CAmmoDef::MaxCarry detoured!");
 	delete hGameData;
+}
+// ------------
+// SMCParser
+// Code is based from: 'l4d_info_editor.sp'
+void LoadConfigSMC()
+{
+	char sPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sPath, sizeof(sPath), "data/l4d_reservecontrol.cfg");
+
+	if( FileExists(sPath) )
+	{
+		SMCParser parser = new SMCParser();
+		parser.OnKeyValue = SMC_OnKeyValue;
+
+		// Setup error logging
+		char sError[128];
+		int iLine, iCol;
+		SMCError result = parser.ParseFile(sPath, iLine, iCol);
+		if( result != SMCError_Okay )
+		{
+			if( parser.GetErrorString(result, sError, sizeof(sError)) )
+			{
+				SetFailState("CONFIG ERROR ID: #%d, %s. (line %d, column %d) [FILE: %s]", result, sError, iLine, iCol, sPath);
+			}
+			else
+			{
+				SetFailState("Unable to load config. Bad format? Check for missing { } etc.");
+			}
+		}
+
+		delete parser;
+		return;
+	}
+	SetFailState("Could not load CFG '%s'! Plugin aborted.", sPath);
+}
+public SMCResult SMC_OnKeyValue(Handle smc, const char[] key, const char[] value, bool key_quotes, bool value_quotes)
+{
+	if( !g_smReserveData )
+		g_smReserveData = new StringMap();
+
+	#if DEBUG
+	PrintToServer("SMC: %s and %s", key, value);
+	#endif
+	g_smReserveData.SetValue(key, StringToInt(value));
+
+	// FYI: If you don't return, its this anyways
+	return SMCParse_Continue;
 }
 
 // ++ Hooks ++
@@ -100,34 +147,36 @@ public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams
 		{
 			char sWeapon[32];
 			GetEntityClassname(iWeapon, sWeapon, sizeof(sWeapon));
-			int val;
-			g_smWeaponData.GetValue(sWeapon, val);
+			int iConfigReserve;
 
-			hReturn.Value = val;
-			return MRES_ChangedOverride;
+			if( g_smReserveData.GetValue(sWeapon, iConfigReserve) )
+			{
+				hReturn.Value = iConfigReserve;
+				return MRES_Override;
+			}
+			return MRES_Handled;
 		}
 	}
-	return MRES_Handled;
+	return MRES_Ignored;
 }
-
 // -----------
 // SDKHooks
+// CAmmoDef::MaxCarry does not change max reserve if its lower than the max, :L
 public void OnSDKWeaponEquipPost(int client, int weapon)
 {
 	char sWeapon[24];
 	GetEntityClassname(weapon, sWeapon, sizeof sWeapon);
 	int iReserve = GetEntProp(weapon, Prop_Data, "m_iExtraPrimaryAmmo");
+
 	int iConfigReserve;
-	g_smWeaponData.GetValue(sWeapon, iConfigReserve);
-	// to fix CAmmoDef::MaxCarry not changing max reserve if its lower than the max :L.
-	if( iReserve > iConfigReserve )
+	if( g_smReserveData.GetValue(sWeapon, iConfigReserve) && iReserve > iConfigReserve )
+	{
 		SetEntProp(weapon, Prop_Send, "m_iExtraPrimaryAmmo", iConfigReserve);
 
-	#if DEBUG
-	PrintToChatAll("\x01%N got %s [%i] \x05(%i --> %i reserve)", client, sWeapon, weapon, iReserve, iConfigReserve);
-	#elseif BEAT_THE_RUSH
-	PrintHintText(client, "%s \n(%i --> %i reserve)", sWeapon, iReserve, iConfigReserve);
-	#endif
+		#if DEBUG
+		PrintToChatAll("\x01%N got %s [%i] \x05(Fixed %i --> %i max reserve)", client, sWeapon, weapon, iReserve, iConfigReserve);
+		#endif
+	}
 }
 
 // -----------
@@ -145,35 +194,30 @@ public void Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
 }
 // ++ Helpers ++
 // -------------
-void DoReserveStringMap(bool is_l4d2)
-{
-	g_smWeaponData = new StringMap();
-//	g_smWeaponData.SetValue("weapon_pistol", 65535); // irrelevant
-	g_smWeaponData.SetValue("weapon_smg", 500);
-	g_smWeaponData.SetValue("weapon_pumpshotgun", 64);
-	g_smWeaponData.SetValue("weapon_rifle", 400);
-	g_smWeaponData.SetValue("weapon_autoshotgun", 80);
-	g_smWeaponData.SetValue("weapon_hunting_rifle", 120);
-	if( is_l4d2 )
-	{
-		g_smWeaponData.SetValue("weapon_smg_silenced", 260);
-		g_smWeaponData.SetValue("weapon_shotgun_chrome", 72); // 3rd longest, 21 chars
-		g_smWeaponData.SetValue("weapon_rifle_desert", 400);
-		g_smWeaponData.SetValue("weapon_rifle_ak47", 200);
-		g_smWeaponData.SetValue("weapon_shotgun_spas", 72);
-		g_smWeaponData.SetValue("weapon_sniper_military", 150); // 2nd longest, 22 chars
-
-		g_smWeaponData.SetValue("weapon_smg_mp5", 480);
-		g_smWeaponData.SetValue("weapon_rifle_sg552", 320);
-		g_smWeaponData.SetValue("weapon_sniper_scout", 90);
-		g_smWeaponData.SetValue("weapon_sniper_awp", 72);
-
-		g_smWeaponData.SetValue("weapon_grenade_launcher", 30); // Longest, 23 chars
-//		g_smWeaponData.SetValue("weapon_pistol_magnum", 65535); // irrelevant
-//		g_smWeaponData.SetValue("weapon_rifle_m60", 120);
-	}
-}
-stock bool IsSurvivor(int client)
+bool IsSurvivor(int client)
 {
 	return GetClientTeam(client) == TEAM_SURVIVOR;
 }
+/*
+// ++ KeyValues ++
+// ---------------
+//Not what we need! We wamt a dynamic iterable config file, and KeyValues can't do it..
+void LoadKeyValues()
+{
+	KeyValues kvReserveData = new KeyValues("ReserveControl");
+	char sPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sPath, sizeof(sPath), "data/l4d_reservecontrol.cfg");
+	if( !kvReserveData.ImportFromFile(sPath) )
+	{
+		delete kvReserveData;
+		SetFailState("Could not load CFG '%s'! Plugin aborted.", sPath);
+	}
+
+	#if DEBUG
+	char buffer[256];
+	//kvReserveData.GetSectionName(buffer, sizeof(buffer)); // 'ReserveControl'
+	PrintToServer("LoadConfigSMC: %s", buffer);
+	#endif
+	delete kvReserveData;
+}
+*/
