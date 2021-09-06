@@ -3,6 +3,9 @@ Individually control weapon reserves independant of `ammo_*` cvars. This allows 
 
 To configure reserve ammo, edit the `/addons/sourcemod/data/l4d_reservecontrol.cfg` file. Example file and example error cases are provided.
 
+## Bugs
+* Weapons don't get their reserves be set to their intended ones, if the weapon is given through means outside of item spawners.
+
 ## Error Cases:
 ### ID #8
 __"Section beginning without a matching ending."__
