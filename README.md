@@ -1,4 +1,4 @@
-# Luigi Survival Configs
+# Luigi Survival Assets
 ~~its zombie's L4D2 server lol~~
 Plugins specifically made for the server are also available to see!
 
@@ -10,6 +10,3 @@ Additionally, some authors choose to store licenses in their own plugins's sourc
 ## Pre-installed Requirements
 - [DHooks: Dynamic Detours](https://forums.alliedmods.net/showthread.php?p=2588686#post2588686)
 - [Left 4 DHooks Direct](https://forums.alliedmods.net/showthread.php?t=321696)
-
-# Discord
-Join the Discord at discord.gg/sgCvBg437D, give a greet when you join :smile:

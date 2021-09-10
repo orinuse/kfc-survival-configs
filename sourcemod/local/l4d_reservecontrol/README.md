@@ -11,6 +11,7 @@ Edit the `/addons/sourcemod/data/l4d_reservecontrol.cfg` file. Example usage is 
 
 ### Changelog
 1.0a (09-Sep-2021)
+- Released on AlliedModders.
 - New root admin command to reload config: `sm_rc_reload`. Also has an alias, `sm_reservecontrol_reload`.
 
 1.0 (07-Sep-2021)
