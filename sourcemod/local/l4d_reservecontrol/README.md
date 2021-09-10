@@ -1,10 +1,20 @@
 # Plugin Description
-Individually control weapon reserves independant of `ammo_*` cvars. This allows ease for weapon script modders who wish to heavilly differentiate weapons that use the same ammo type from the rest, such as the Steyr Scout.
+Made possible with ![Psykotikism's Library of L4Ds Signatures](https://github.com/Psykotikism/L4D1-2_Signatures)!
 
-To configure reserve ammo, edit the `/addons/sourcemod/data/l4d_reservecontrol.cfg` file. Example file and example error cases are provided.
+Individually control weapons's reserve counts independent of the `ammo_*` cvars. For weapon stat modders so fighting with ammo types to set reserve counts for ~~CSS Sniper~~ weapons is avoided.
+
+## Customization
+Edit the `/addons/sourcemod/data/l4d_reservecontrol.cfg` file. Example usage is provided, with also example error cases.
 
 ## Bugs
-* Weapons don't get their reserves be set to their intended ones, if the weapon is given through means outside of item spawners.
+* On listen servers, weapons from the `give` command won't start with the correct reserve count, till ammo is refilled.
+
+### Changelog
+1.0a (09-Sep-2021)
+- New root admin command to reload config: `sm_rc_reload`. Also has an alias, `sm_reservecontrol_reload`.
+
+1.0 (07-Sep-2021)
+- Initial release
 
 ## Error Cases:
 ### ID #8

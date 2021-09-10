@@ -7,7 +7,7 @@
 
 #define DEBUG 0
 #define GAMEDATA "l4d_reservecontrol"
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0a"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -29,7 +29,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 		g_bL4D1 = true;
 	else if( engine == Engine_Left4Dead2 )
 		g_bL4D2 = true;
-*/
+	*/
 	if( engine != Engine_Left4Dead && engine != Engine_Left4Dead2 )
 	{
 		strcopy(error, err_max, "Plugin only supports Left 4 Dead 1 & 2");
@@ -48,7 +48,11 @@ public void OnPluginStart()
 {
 	LoadGameData();
 	LoadConfigSMC();
+
 	CreateConVar("l4d_reservecontrol_version", PLUGIN_VERSION, "'Reserve Control' plugin's version", FCVAR_SPONLY|FCVAR_DONTRECORD|FCVAR_NOTIFY);
+	RegAdminCmd("sm_reservecontrol_reload",	CmdReserveReload, ADMFLAG_ROOT, "Resets the reserve ammo data, then reload the config.");
+	RegAdminCmd("sm_rc_reload", 			CmdReserveReload, ADMFLAG_ROOT, "Resets the reserve ammo data, then reload the config.");
+
 	HookEvent("player_team", Event_PlayerTeam);
 
 	if( g_bLateLoad )
@@ -65,23 +69,22 @@ public void OnPluginStart()
 void LoadGameData()
 {
 	GameData hGameData = new GameData(GAMEDATA);
-	if( !hGameData ) SetFailState("'x04Failed to find \"%s.txt\" gamedata!", GAMEDATA);
+	if( !hGameData ) SetFailState("Failed to find \"%s.txt\" gamedata!", GAMEDATA);
 
-	// This: RAW
+	// This: RAW (?)
 	// Params: INT [AmmoIndex], CBaseCombatCharacter const*
 	// Return: INT
 	g_dynAmmoDefMaxCarry = DynamicDetour.FromConf(hGameData, "CAmmoDef::MaxCarry");
-	// Which if + else if style do you prefer?
-	if (!g_dynAmmoDefMaxCarry)
+	if( !g_dynAmmoDefMaxCarry )
 		SetFailState("Failed to setup dhook for CAmmoDef::MaxCarry!");
-	else if (!g_dynAmmoDefMaxCarry.Enable(Hook_Post, Detour_AmmoDefMaxCarry))
+	else if( !g_dynAmmoDefMaxCarry.Enable(Hook_Post, Detour_AmmoDefMaxCarry) )
 		SetFailState("Failed to enable detour for CAmmoDef::MaxCarry!");
 
 	delete hGameData;
 }
 // ------------
 // SMCParser
-// Code is based from: 'l4d_info_editor.sp'
+// Code is *very* based of: 'l4d_info_editor.sp'
 void LoadConfigSMC()
 {
 	char sPath[PLATFORM_MAX_PATH];
@@ -118,13 +121,22 @@ public SMCResult SMC_OnKeyValue(Handle smc, const char[] key, const char[] value
 	if( !g_smReserveData )
 		g_smReserveData = new StringMap();
 
+	g_smReserveData.SetValue(key, StringToInt(value));
 	#if DEBUG
 	PrintToServer("SMC: %s and %s", key, value);
 	#endif
-	g_smReserveData.SetValue(key, StringToInt(value));
 
 	// FYI: If you don't return, its this anyways
 	return SMCParse_Continue;
+}
+// ------------
+// Commands
+public Action CmdReserveReload(int client, int args)
+{
+	g_smReserveData.Clear();
+	LoadConfigSMC();
+	ReplyToCommand(client, "\x05[Reserve Control] \x01Reloaded the config!");
+	return Plugin_Handled;
 }
 
 // ++ Hooks ++
@@ -147,8 +159,8 @@ public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams
 		{
 			char sWeapon[32];
 			GetEntityClassname(iWeapon, sWeapon, sizeof(sWeapon));
-			int iConfigReserve;
 
+			int iConfigReserve;
 			if( g_smReserveData.GetValue(sWeapon, iConfigReserve) )
 			{
 				hReturn.Value = iConfigReserve;
@@ -159,13 +171,31 @@ public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams
 	}
 	return MRES_Ignored;
 }
+/*
+public MRESReturn Detour_TerrorGiveNamedItem(int pThis, DHookParam hParams)
+{
+	char subwepname[32];
+	hParams.GetString(1, subwepname, sizeof(subwepname));
+	int subtype		= hParams.Get(2); // something from HL1 to "allow weapons of the same type", I don't know if this is still used
+	bool arg3		= hParams.Get(3);
+	int arg4		= g_bL4D2 && !hParams.IsNull(4) ? hParams.Get(4) : -1;
+
+	// Yields no results...
+	hParams.Set(3, true);
+	#if DEBUG
+	PrintToServer("== Detour_TerrorGiveNamedItem ==\n pThis = %N, subwepname = %s, subtype = %i, arg3 = %i, arg4 = %i", pThis, subwepname, subtype, arg3, arg4);
+	#endif
+
+	return MRES_ChangedHandled;
+}
+*/
 // -----------
 // SDKHooks
 // CAmmoDef::MaxCarry does not change max reserve if its lower than the max, :L
 public void OnSDKWeaponEquipPost(int client, int weapon)
 {
 	char sWeapon[24];
-	GetEntityClassname(weapon, sWeapon, sizeof sWeapon);
+	GetEntityClassname(weapon, sWeapon, sizeof(sWeapon));
 	int iReserve = GetEntProp(weapon, Prop_Data, "m_iExtraPrimaryAmmo");
 
 	int iConfigReserve;
@@ -201,7 +231,9 @@ bool IsSurvivor(int client)
 /*
 // ++ KeyValues ++
 // ---------------
-//Not what we need! We wamt a dynamic iterable config file, and KeyValues can't do it..
+// Not what we need! We wamt a dynamic iterable config file *with* only one section, and KeyValues can't do it..
+?
+// At least, it seems more geared for complicated files of a certain setup
 void LoadKeyValues()
 {
 	KeyValues kvReserveData = new KeyValues("ReserveControl");

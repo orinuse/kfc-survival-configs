@@ -10,9 +10,10 @@
 			"game" "left4dead"
 			"game" "left4dead2"
 		}
-		// DHooks
+		// DHooks Detour
 		"Functions"
 		{
+			// Params: (int,CBaseCombatCharacter const*)
 			"CAmmoDef::MaxCarry"
 			{
 				"signature"	"CAmmoDef::MaxCarry"
@@ -25,7 +26,7 @@
 					{
 						"type"	"int"
 					}
-					"this"
+					"self"
 					{
 						"type"	"cbaseentity"
 					}
