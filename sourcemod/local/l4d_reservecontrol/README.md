@@ -3,11 +3,13 @@ Made possible with ![Psykotikism's Library of L4Ds Signatures](https://github.co
 
 Individually control weapons's reserve counts independent of the `ammo_*` cvars. For weapon stat modders so fighting with ammo types to set reserve counts for ~~CSS Sniper~~ weapons is avoided.
 
+Requires [DHooks: Dynamic Detours](https://forums.alliedmods.net/showthread.php?p=2588686#post2588686).
+
 ## Customization
 Edit the `/addons/sourcemod/data/l4d_reservecontrol.cfg` file. Example usage is provided, with also example error cases.
 
 ## Bugs
-* On listen servers, weapons from the `give` command won't start with the correct reserve count, till ammo is refilled.
+* Weapons from the `give` command won't start with the correct reserve count, till ammo is refilled. (At least, for listen servers)
 
 ### Changelog
 1.0a (09-Sep-2021)
