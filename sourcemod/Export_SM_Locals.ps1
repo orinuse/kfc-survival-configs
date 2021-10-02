@@ -4,11 +4,11 @@
 <#
   ++ CONFIGURATION ++
 #>
-$L4D1_PATH = "C:\Program Files (x86)\Steam\steamapps\common\left 4 dead\left4dead\addons\sourcemod"
-$L4D2_PATH = "C:\Program Files (x86)\Steam\steamapps\common\Left 4 Dead 2\left4dead2\addons\sourcemod"
-$REPO_PATH = "D:\Useful Software\Git\Repos\luigi-survival-assets\sourcemod\local"
+$L4D1SM_PATH = "C:\Program Files (x86)\Steam\steamapps\common\left 4 dead\left4dead\addons\sourcemod"
+$L4D2SM_PATH = "C:\Program Files (x86)\Steam\steamapps\common\Left 4 Dead 2\left4dead2\addons\sourcemod"
+$REPOSM_PATH = "D:\Useful Software\Git\Repos\luigi-survival-assets\sourcemod\local"
 
-Set-Location $REPO_PATH
+Set-Location $REPOSM_PATH
 $fileFilters = 
 @{
     Exts            = @("*.cfg", "*.smx"  , "*.sp"     , "*.txt"   )
@@ -22,8 +22,8 @@ $fileFilters =
 #>
 for ($i=0; $i -lt $fileFilters.Length; $i++)
 {
-    Write-Output "STARTING AT FOLDER: '$REPO_PATH'"
-    $fileResults = (Get-ChildItem $REPO_PATH -Name -Recurse -Include $fileFilters.Exts)
+    Write-Output "STARTING AT FOLDER: '$REPOSM_PATH'"
+    $fileResults = (Get-ChildItem $REPOSM_PATH -Name -Recurse -Include $fileFilters.Exts)
     foreach($file in $fileResults)
     {
         # Setup - Substring Filtering
@@ -38,6 +38,7 @@ for ($i=0; $i -lt $fileFilters.Length; $i++)
         $length = $fileSplit.Length - $fileIndex
         $dest = [string]::Join("\", $fileSplit, $fileIndex, $length)
         $fileL4D1 = $true
+
         foreach($entry in $fileFilters.L4D1Blacklist)
         { 
             if( $dest.Contains($entry) )
@@ -51,11 +52,11 @@ for ($i=0; $i -lt $fileFilters.Length; $i++)
         Write-Output "Copying '$file' to:"
         if( $fileL4D1 )
         {
-            Copy-Item $REPO_PATH\$file $L4D1_PATH\$dest
-            Write-Output "- $L4D1_PATH\$dest"
+            Copy-Item $REPOSM_PATH\$file $L4D1SM_PATH\$dest
+            Write-Output "- $L4D1SM_PATH\$dest"
         }
 
-        Copy-Item $REPO_PATH\$file $L4D2_PATH\$dest
-        Write-Output "- $L4D2_PATH\$dest"
+        Copy-Item $REPOSM_PATH\$file $L4D2SM_PATH\$dest
+        Write-Output "- $L4D2SM_PATH\$dest"
     }
 }

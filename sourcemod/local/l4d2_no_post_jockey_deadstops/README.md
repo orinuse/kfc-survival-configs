@@ -1,6 +1,6 @@
 # Plugin Description
 xes melees's shoves not being cancelled and carrying over to Jockey-ied state, causing immediate deadstops when a ride starts.<br>
-This is a plugin authored by a 3rd party with a license provided; author being SirPlease (or Sir). Read both the disclaimer at the repository's main `README.md`, and this plugin's license in the source code for more info.
+This is a plugin authored by a 3rd party with a license provided; author being SirPlease (or Sir). Read both the disclaimer at the repository's main `README.md`, and this plugin's license in its source repository for more info.
 
 ## Source
 Original Author: SirPlease
