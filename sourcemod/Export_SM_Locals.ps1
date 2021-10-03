@@ -1,5 +1,5 @@
 <#
-  Orin's PowerShell script to export a GitHub repo's files.
+  Orin's PowerShell script to export a GitHub repo's SM files.
 #>
 <#
   ++ CONFIGURATION ++
@@ -14,49 +14,57 @@ $fileFilters =
     Exts            = @("*.cfg", "*.smx"  , "*.sp"     , "*.txt"   )
     Folders         = @("data" , "plugins", "scripting", "gamedata")
 
+    Blacklist       = @("l4d_reservecontrol\data", "l4d2_vscript_commonlimit_cap")
     L4D1Blacklist   = @("l4d2", "vscript")
 }
 
 <#
   ++ MAIN ++
 #>
-for ($i=0; $i -lt $fileFilters.Length; $i++)
+Write-Output "STARTING AT FOLDER: '$REPOSM_PATH'"
+$fileResults = (Get-ChildItem $REPOSM_PATH -Name -Recurse -Include $fileFilters.Exts)
+foreach($file in $fileResults)
 {
-    Write-Output "STARTING AT FOLDER: '$REPOSM_PATH'"
-    $fileResults = (Get-ChildItem $REPOSM_PATH -Name -Recurse -Include $fileFilters.Exts)
-    foreach($file in $fileResults)
+    ## is there a better way to do these :(
+    $fileAbandon = $false
+    foreach($entry in $fileFilters.Blacklist)
     {
-        # Setup - Substring Filtering
-        $fileSplit = $file.Split("\")
-        $fileIndex = 0
-        while( $fileFilters.Folders.Contains($fileSplit[$fileIndex]) -eq $false )
-        {
-            $fileIndex++
+        if( $file.Contains($entry) ) {
+            $fileAbandon = $true
+            break
         }
-
-        # Export - Build a PATH!
-        $length = $fileSplit.Length - $fileIndex
-        $dest = [string]::Join("\", $fileSplit, $fileIndex, $length)
-        $fileL4D1 = $true
-
-        foreach($entry in $fileFilters.L4D1Blacklist)
-        { 
-            if( $dest.Contains($entry) )
-            {
-                $fileL4D1 = $false
-            }
-        }
-        
-        # Export - ITS HAPPENING
-        ## Bandaid to not push l4d2 plugins to l4d1 folders
-        Write-Output "Copying '$file' to:"
-        if( $fileL4D1 )
-        {
-            Copy-Item $REPOSM_PATH\$file $L4D1SM_PATH\$dest
-            Write-Output "- $L4D1SM_PATH\$dest"
-        }
-
-        Copy-Item $REPOSM_PATH\$file $L4D2SM_PATH\$dest
-        Write-Output "- $L4D2SM_PATH\$dest"
     }
+    if( !$fileAbandon ) { continue }
+
+    ### Setup - Substring Filtering ###
+    ###################################
+    $fileSplit = $file.Split("\")
+    $fileIndex = 0
+    while( $fileFilters.Folders.Contains($fileSplit[$fileIndex]) -eq $false ) {
+        $fileIndex++
+    }
+
+    ### Export - Build a PATH! ###
+    ##############################
+    $length = $fileSplit.Length - $fileIndex
+    $dest = [string]::Join("\", $fileSplit, $fileIndex, $length)
+    $fileL4D1 = $true
+
+    foreach($entry in $fileFilters.L4D1Blacklist) {
+        if( $dest.Contains($entry) ) {
+            $fileL4D1 = $false
+        }
+    }
+
+    ### Export - ITS HAPPENING ###
+    ##############################
+    ## Bandaid to not push l4d2 plugins to l4d1 folders
+    Write-Output "Copying '$file' to:"
+    if( $fileL4D1 ) {
+        Copy-Item $REPOSM_PATH\$file $L4D1SM_PATH\$dest
+        Write-Output "- $L4D1SM_PATH\$dest"
+    }
+
+    Copy-Item $REPOSM_PATH\$file $L4D2SM_PATH\$dest
+    Write-Output "- $L4D2SM_PATH\$dest"
 }
