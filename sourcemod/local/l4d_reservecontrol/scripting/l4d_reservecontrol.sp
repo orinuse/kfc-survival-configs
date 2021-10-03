@@ -1,13 +1,13 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#define REQUIRE_PLUGIN
+#define REQUIRE_EXTENSIONS
 #include <dhooks>
-#undef REQUIRE_PLUGIN
+#undef REQUIRE_EXTENSIONS
 
 #define DEBUG 0
 #define GAMEDATA "l4d_reservecontrol"
-#define PLUGIN_VERSION "1.0a"
+#define PLUGIN_VERSION "1.0b"
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -41,8 +41,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 // ++ OnLoad ++ 
 // ------------
-static StringMap g_smReserveData;
-static DynamicDetour g_dynAmmoDefMaxCarry;
+static StringMap g_hReserveHashMap;
+static DynamicDetour g_hDetour__AmmoDefMaxCarry;
 
 public void OnPluginStart()
 {
@@ -74,10 +74,10 @@ void LoadGameData()
 	// This: RAW (?)
 	// Params: INT [AmmoIndex], CBaseCombatCharacter const*
 	// Return: INT
-	g_dynAmmoDefMaxCarry = DynamicDetour.FromConf(hGameData, "CAmmoDef::MaxCarry");
-	if( !g_dynAmmoDefMaxCarry )
+	g_hDetour__AmmoDefMaxCarry = DynamicDetour.FromConf(hGameData, "CAmmoDef::MaxCarry");
+	if( !g_hDetour__AmmoDefMaxCarry )
 		SetFailState("Failed to setup dhook for CAmmoDef::MaxCarry!");
-	else if( !g_dynAmmoDefMaxCarry.Enable(Hook_Post, Detour_AmmoDefMaxCarry) )
+	else if( !g_hDetour__AmmoDefMaxCarry.Enable(Hook_Post, Detour_AmmoDefMaxCarry) )
 		SetFailState("Failed to enable detour for CAmmoDef::MaxCarry!");
 
 	delete hGameData;
@@ -118,10 +118,10 @@ void LoadConfigSMC()
 }
 public SMCResult SMC_OnKeyValue(Handle smc, const char[] key, const char[] value, bool key_quotes, bool value_quotes)
 {
-	if( !g_smReserveData )
-		g_smReserveData = new StringMap();
+	if( !g_hReserveHashMap )
+		g_hReserveHashMap = new StringMap();
 
-	g_smReserveData.SetValue(key, StringToInt(value));
+	g_hReserveHashMap.SetValue(key, StringToInt(value));
 	#if DEBUG
 	PrintToServer("SMC: %s and %s", key, value);
 	#endif
@@ -133,7 +133,7 @@ public SMCResult SMC_OnKeyValue(Handle smc, const char[] key, const char[] value
 // Commands
 public Action CmdReserveReload(int client, int args)
 {
-	g_smReserveData.Clear();
+	g_hReserveHashMap.Clear();
 	LoadConfigSMC();
 	ReplyToCommand(client, "\x05[Reserve Control] \x01Reloaded the config!");
 	return Plugin_Handled;
@@ -161,7 +161,7 @@ public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams
 			GetEntityClassname(iWeapon, sWeapon, sizeof(sWeapon));
 
 			int iConfigReserve;
-			if( g_smReserveData.GetValue(sWeapon, iConfigReserve) )
+			if( g_hReserveHashMap.GetValue(sWeapon, iConfigReserve) )
 			{
 				hReturn.Value = iConfigReserve;
 				return MRES_Override;
@@ -199,7 +199,7 @@ public void OnSDKWeaponEquipPost(int client, int weapon)
 	int iReserve = GetEntProp(weapon, Prop_Data, "m_iExtraPrimaryAmmo");
 
 	int iConfigReserve;
-	if( g_smReserveData.GetValue(sWeapon, iConfigReserve) && iReserve > iConfigReserve )
+	if( g_hReserveHashMap.GetValue(sWeapon, iConfigReserve) && iReserve > iConfigReserve )
 	{
 		SetEntProp(weapon, Prop_Send, "m_iExtraPrimaryAmmo", iConfigReserve);
 

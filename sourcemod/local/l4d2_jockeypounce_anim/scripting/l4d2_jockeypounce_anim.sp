@@ -10,6 +10,15 @@
 bool g_bAnimHooked[MAXPLAYERS+1], g_bJockeyJumping[MAXPLAYERS+1], g_bLateLoad;
 ConVar g_cvBotMimic;
 
+public Plugin myinfo = 
+{
+	name = "[L4D2] Jockey Pounce Animation",
+	author = "Orin",
+	description = "Forces Jockies to use the unused Pounce animation when in ACT_JUMP.",
+	version = PLUGIN_VERSION,
+	url = "https://github.com/orinuse/kfc-survival-configs/tree/main/sourcemod/scripting/l4d2_jockeypounce_anim"
+}
+
 /*========================================================================================
 	Change Log:
 
@@ -26,14 +35,7 @@ ConVar g_cvBotMimic;
 	- Plugin release
 
 ======================================================================================*/
-public Plugin myinfo = 
-{
-	name = "[L4D2] Jockey Pounce Animation",
-	author = "Orin",
-	description = "Forces Jockies to use the unused Pounce animation when in ACT_JUMP.",
-	version = PLUGIN_VERSION,
-	url = "https://github.com/orinuse/kfc-survival-configs/tree/main/sourcemod/scripting/l4d2_jockeypounce_anim"
-}
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	EngineVersion test = GetEngineVersion();

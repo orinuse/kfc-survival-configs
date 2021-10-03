@@ -12,6 +12,9 @@ Edit the `/addons/sourcemod/data/l4d_reservecontrol.cfg` file. Example usage is 
 * Weapons from the `give` command won't start with the correct reserve count, till ammo is refilled. (At least, for listen servers)
 
 ### Changelog
+1.0b (09-Sep-2021)
+- Fixed `REQUIRE_PLUGIN` being used, when it should be `REQUIRE_EXTENSIONS`
+
 1.0a (09-Sep-2021)
 - Released on AlliedModders.
 - New root admin command to reload config: `sm_rc_reload`. Also has an alias, `sm_reservecontrol_reload`.

@@ -1,2 +1,12 @@
-*STAGING*
+# Exts
+*.7z
+*.rar
+*.zip
+
+# Files
+## Folders
+zSTAGING
+
+## Individuals
+STAGE*
 AdrenalineSpeed*.*
