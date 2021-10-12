@@ -1,5 +1,6 @@
 <#
-  Orin's PowerShell script to export a GitHub repo's SM files.
+  Orin's PowerShell script to export a GitHub repo's EMS files.
+  Like a Makefile, lol
 #>
 <#
   ++ CONFIGURATION ++
@@ -16,13 +17,12 @@ $fileFilters =
 <#
   ++ MAIN ++
 #>
-Write-Output "STARTING AT FOLDER: '$REPOPATH_EMS'"
+Write-Host "STARTING AT FOLDER: '$REPOPATH_EMS'"
 $fileResults = (Get-ChildItem $REPOPATH_EMS -Name -Recurse -Include $fileFilters.Exts)
 foreach($file in $fileResults)
 {
     ### Export - ITS HAPPENING ###
     ##############################
-    ## Bandaid to not push l4d2 plugins to l4d1 folders
-    Write-Output "Copying '$file' to: $L4D2PATH_EMS\$file"
+    Write-Host "Copying '$file' to: $L4D2PATH_EMS\$file"
     Copy-Item $REPOPATH_EMS\$file $L4D2PATH_EMS\$file
 }

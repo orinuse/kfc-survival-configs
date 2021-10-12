@@ -7,21 +7,21 @@
 $L4D1SM_PATH = "C:\Program Files (x86)\Steam\steamapps\common\left 4 dead\left4dead\addons\sourcemod"
 $L4D2SM_PATH = "C:\Program Files (x86)\Steam\steamapps\common\Left 4 Dead 2\left4dead2\addons\sourcemod"
 $REPOSM_PATH = "D:\Useful Software\Git\Repos\luigi-survival-assets\sourcemod\local"
-
 Set-Location $REPOSM_PATH
+
 $fileFilters = 
 @{
     Exts            = @("*.cfg", "*.smx"  , "*.sp"     , "*.txt"   )
     Folders         = @("data" , "plugins", "scripting", "gamedata")
 
-    Blacklist       = @("l4d_reservecontrol\data", "l4d2_vscript_commonlimit_cap")
+    Blacklist       = @("l4d_reservecontrol\data", "l4d2_wh_firerate")
     L4D1Blacklist   = @("l4d2", "vscript")
 }
 
 <#
   ++ MAIN ++
 #>
-Write-Output "STARTING AT FOLDER: '$REPOSM_PATH'"
+Write-Host "STARTING AT FOLDER: '$REPOSM_PATH'"
 $fileResults = (Get-ChildItem $REPOSM_PATH -Name -Recurse -Include $fileFilters.Exts)
 foreach($file in $fileResults)
 {
@@ -34,7 +34,7 @@ foreach($file in $fileResults)
             break
         }
     }
-    if( !$fileAbandon ) { continue }
+    if( $fileAbandon ) { continue }
 
     ### Setup - Substring Filtering ###
     ###################################
@@ -59,12 +59,12 @@ foreach($file in $fileResults)
     ### Export - ITS HAPPENING ###
     ##############################
     ## Bandaid to not push l4d2 plugins to l4d1 folders
-    Write-Output "Copying '$file' to:"
+    Write-Host "Copying '$file' to:"
     if( $fileL4D1 ) {
         Copy-Item $REPOSM_PATH\$file $L4D1SM_PATH\$dest
-        Write-Output "- $L4D1SM_PATH\$dest"
+        Write-Host "- $L4D1SM_PATH\$dest"
     }
 
     Copy-Item $REPOSM_PATH\$file $L4D2SM_PATH\$dest
-    Write-Output "- $L4D2SM_PATH\$dest"
+    Write-Host "- $L4D2SM_PATH\$dest"
 }
