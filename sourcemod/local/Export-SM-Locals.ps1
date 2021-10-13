@@ -14,7 +14,7 @@ $fileFilters =
     Exts            = @("*.cfg", "*.smx"  , "*.sp"     , "*.txt"   )
     Folders         = @("data" , "plugins", "scripting", "gamedata")
 
-    Blacklist       = @("l4d_reservecontrol\data", "l4d2_wh_firerate")
+    Blacklist       = @("l4d_reservecontrol\data")
     L4D1Blacklist   = @("l4d2", "vscript")
 }
 

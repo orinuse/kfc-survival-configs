@@ -1,5 +1,9 @@
-// Interval of the main bot's Think function (default is 0.1 which means 100 ms)
-const BOT_THINK_INTERVAL = 0.18; // Set the max i can get even though the think functions can go up to 30 ms (0.03s) and the CTerrorPlayer entities limit their think functions to max 66 ms (0.06s)
+// Interval of the main bot's Think function (default is 100ms or 0.1s)
+//// To get a think's calls per second (CPS), do [1000 / Xms]
+// There are limits:
+//// CBaseEntity	- 30 CPS (33ms or 0.03s)
+//// CTerrorPlayer	- 15 CPS (66ms or 0.06s)
+const BOT_THINK_INTERVAL = 0.333; // 3 CPS
 
 // Interval of the logic that coordinates the scavenge process
 const SCAVENGE_MANAGER_INTERVAL = 1;
@@ -8,7 +12,7 @@ const SCAVENGE_MANAGER_INTERVAL = 1;
 const SPIT_RADIUS = 150;
 
 // Min survivor bot's distance to a tank for throwing molotovs
-const TANK_MOLOTOV_MIN = 200;
+const TANK_MOLOTOV_MIN = 300;
 
 // Max survivor bot's distance to a tank for throwing molotovs
 const TANK_MOLOTOV_MAX = 600;
@@ -107,7 +111,7 @@ const RETREAT_FROM_TANK_DINSTANCE = 150;
 const ATTACK_SI_MIN_DISTANCE = 40;
 
 // Don't send the ATTACK command to the bot to attack an SI who is pinning a teammate if the distance to the SI is greater than this
-const ATTACK_SI_MAX_DISTANCE = 800;
+const ATTACK_SI_MAX_DISTANCE = 750;
 
 // Sound scripts to play when a survivor gives an item to another survivor
 const SOUND_BIGREWARD = "Hint.BigReward"; // UI/BigReward.wav	(played on the giver)

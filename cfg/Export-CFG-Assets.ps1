@@ -37,10 +37,10 @@ foreach($file in $fileResults)
     ## Bandaid to not push l4d2 plugins to l4d1 folders
     Write-Host "Copying '$file' to:"
     if( $fileL4D1 ) {
-        Copy-Item $REPOCFG_PATH\$file $L4D1CFG_PATH\$dest
+        Copy-Item $REPOCFG_PATH\$file $L4D1CFG_PATH\$file
         Write-Host "- $L4D1CFG_PATH\$file"
     }
 
-    Copy-Item $REPOCFG_PATH\$file $L4D2CFG_PATH\$dest
+    Copy-Item $REPOCFG_PATH\$file $L4D2CFG_PATH\$file
     Write-Host "- $L4D2CFG_PATH\$file"
 }
