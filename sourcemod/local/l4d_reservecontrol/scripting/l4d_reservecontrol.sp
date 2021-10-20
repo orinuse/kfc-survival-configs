@@ -142,18 +142,22 @@ public Action CmdReserveReload(int client, int args)
 // ++ Hooks ++
 // -----------
 // DHooks
-#define MAX_INVENTORY_SLOTS 5
+// This define IS important; otherwise n == 30 in worst case
+#define MAX_INVENTORY_SLOTS 5 // Ignore items beyond slot5 (sorry gascans and propanes)
 public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams)
 {
 	int ammoindex	= hParams.Get(1);
 	int client		= hParams.Get(2); // Its not like NPCs with guns exist in L4D
 
+	// O(log n)?
 	for( int i=0; i < MAX_INVENTORY_SLOTS; i++ )
 	{
+		// O(2)
 		int iWeapon = GetPlayerWeaponSlot(client, i);
 		if( !IsValidEntity(iWeapon) )
 			continue;
 
+		// O(n + 2)
 		int iPrimaryAmmoType = GetEntProp(iWeapon, Prop_Data, "m_iPrimaryAmmoType");
 		if( ammoindex == iPrimaryAmmoType )
 		{

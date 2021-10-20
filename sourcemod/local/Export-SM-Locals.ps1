@@ -11,8 +11,18 @@ Set-Location $REPOSM_PATH
 
 $fileFilters = 
 @{
+<#>  ## Default ##
     Exts            = @("*.cfg", "*.smx"  , "*.sp"     , "*.txt"   )
     Folders         = @("data" , "plugins", "scripting", "gamedata")
+#>
+<##>  ## Single Options ##
+    Exts            = @("*.cfg")
+    Folders         = @("data")
+#>
+<#>  ## Plugins Only ##
+    Exts            = @("*.smx"  , "*.sp"     )
+    Folders         = @("plugins", "scripting")
+#>
 
     Blacklist       = @("l4d_reservecontrol\data")
     L4D1Blacklist   = @("l4d2", "vscript")
