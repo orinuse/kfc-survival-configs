@@ -17,7 +17,7 @@ public Plugin myinfo =
 {
 	name = "[L4D/L4D2] Reserve Control",
 	author = "Orin, Psykotikism [Signatures]",
-	description = "Individually control weapon reserve independant of 'ammo_*' cvars.",
+	description = "Individually control weapon reserve independant of 'ammo_*' cvars, but by ammo type.",
 	version = PLUGIN_VERSION,
 	url = "https://github.com/orinuse/kfc-survival-configs/tree/main/sourcemod/l4d_reservecontrol"
 };
@@ -157,7 +157,7 @@ public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams
 		if( !IsValidEntity(iWeapon) )
 			continue;
 
-		// O(n + 2)
+		// O(2 + n + 2)
 		int iPrimaryAmmoType = GetEntProp(iWeapon, Prop_Data, "m_iPrimaryAmmoType");
 		if( ammoindex == iPrimaryAmmoType )
 		{
@@ -175,24 +175,6 @@ public MRESReturn Detour_AmmoDefMaxCarry(DHookReturn hReturn, DHookParam hParams
 	}
 	return MRES_Ignored;
 }
-/*
-public MRESReturn Detour_TerrorGiveNamedItem(int pThis, DHookParam hParams)
-{
-	char subwepname[32];
-	hParams.GetString(1, subwepname, sizeof(subwepname));
-	int subtype		= hParams.Get(2); // something from HL1 to "allow weapons of the same type", I don't know if this is still used
-	bool arg3		= hParams.Get(3);
-	int arg4		= g_bL4D2 && !hParams.IsNull(4) ? hParams.Get(4) : -1;
-
-	// Yields no results...
-	hParams.Set(3, true);
-	#if DEBUG
-	PrintToServer("== Detour_TerrorGiveNamedItem ==\n pThis = %N, subwepname = %s, subtype = %i, arg3 = %i, arg4 = %i", pThis, subwepname, subtype, arg3, arg4);
-	#endif
-
-	return MRES_ChangedHandled;
-}
-*/
 // -----------
 // SDKHooks
 // CAmmoDef::MaxCarry does not change max reserve if its lower than the max, :L
@@ -232,28 +214,3 @@ bool IsSurvivor(int client)
 {
 	return GetClientTeam(client) == TEAM_SURVIVOR;
 }
-/*
-// ++ KeyValues ++
-// ---------------
-// Not what we need! We wamt a dynamic iterable config file *with* only one section, and KeyValues can't do it..
-?
-// At least, it seems more geared for complicated files of a certain setup
-void LoadKeyValues()
-{
-	KeyValues kvReserveData = new KeyValues("ReserveControl");
-	char sPath[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, sPath, sizeof(sPath), "data/l4d_reservecontrol.cfg");
-	if( !kvReserveData.ImportFromFile(sPath) )
-	{
-		delete kvReserveData;
-		SetFailState("Could not load CFG '%s'! Plugin aborted.", sPath);
-	}
-
-	#if DEBUG
-	char buffer[256];
-	//kvReserveData.GetSectionName(buffer, sizeof(buffer)); // 'ReserveControl'
-	PrintToServer("LoadConfigSMC: %s", buffer);
-	#endif
-	delete kvReserveData;
-}
-*/
